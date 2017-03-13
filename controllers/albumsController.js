@@ -1,75 +1,70 @@
-var albums = [];
-albums.push({
-              _id: 132,
-              artistName: 'Nine Inch Nails',
-              name: 'The Downward Spiral',
-              releaseDate: '1994, March 8',
-              genres: [ 'industrial', 'industrial metal' ]
-            });
-albums.push({
-              _id: 133,
-              artistName: 'Metallica',
-              name: 'Metallica',
-              releaseDate: '1991, August 12',
-              genres: [ 'heavy metal' ]
-            });
-albums.push({
-              _id: 134,
-              artistName: 'The Prodigy',
-              name: 'Music for the Jilted Generation',
-              releaseDate: '1994, July 4',
-              genres: [ 'electronica', 'breakbeat hardcore', 'rave', 'jungle' ]
-            });
-albums.push({
-              _id: 135,
-              artistName: 'Johnny Cash',
-              name: 'Unchained',
-              releaseDate: '1996, November 5',
-              genres: [ 'country', 'rock' ]
-            });
-
-
+var db = require('../models');
 // GET /api/albums
 function index(req, res) {
-  res.json(albums);
-  // send back all albums as JSON
+  db.Album.find(function(err,albums){
+    if(err){
+      console.log(err);
+    }
+    res.json(albums);
+  });
+};
+// GET /api/albums/:albumId
+function show(req,res) {
+  var id = req.params.id;
+  db.Album.findById({_id:id}, function(err,foundAlbum){
+    if(err){
+      console.log(err);
+    }
+    res.json(foundAlbum);
+  });
 };
 
 // POST /api/albums
 function create(req, res) {
   var newAlbum = {
-    _id: albums[albums.length-1]._id + 1,
-    artistName: req.body.artistName,
+    artistName:req.body.artistName,
     name: req.body.name,
     releaseDate: req.body.releaseDate,
     genres: req.body.genres
-  };
-  albums.push(newAlbum);
-  res.json(newAlbum);
-  // create an album based on request body and send it back as JSON
+  }
+  db.Album.create(newAlbum, function(err, newAlbum){
+    if(err){
+      console.log(err);
+    }
+    console.log("new album made");
+    res.json(newAlbum);
+  });
 }
 
-// GET /api/albums/:albumId
-function show(req, res) {
-  var id = Number(req.params.id);
-  albums.forEach(function(el){
-    if(Number(el._id) === id){
-      res.json(el);
-    };
+function update(req, res) {
+  var id = req.params.id;
+  db.Album.findOne({_id:id}, function(err,found){
+    found.artistName =req.body.artistName,
+    found.name = req.body.name,
+    found.releaseDate = req.body.releaseDate,
+    found.genres = req.body.genres
+    found.save(function(err,dbFound){
+      if(err){
+        console.log(err);
+      }
+      console.log('updated' + dbFound);
+      res.json(dbFound);
+    });
   });
-  // find one album by id and send it back as JSON
 };
 
 // DELETE /api/albums/:albumId
 function destroy(req, res) {
-  // find one album by id, delete it, and send it back as JSON
-}
+  var id = req.params.id;
+  db.Album.findOneAndRemove({_id:id}, function(err,deleted){
+    if(err){
+      console.log(err);
+    }
+    res.json(deleted);
+  });
+};
 
 // PUT or PATCH /api/albums/:albumId
-function update(req, res) {
-  // find one album by id, update it based on request body,
-  // and send it back as JSON
-}
 
 module.exports = {
   index:index,
